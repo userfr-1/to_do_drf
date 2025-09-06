@@ -5,7 +5,10 @@ from drf_yasg.utils import swagger_auto_schema
 from django.shortcuts import get_object_or_404
 
 from .models import User, ToDoList
-from .serializers import LoginSerializer, UserSerializer, ToDoListSerializer
+from .serializers import (
+    LoginSerializer, UserSerializer, ToDoListSerializer,
+    PhoneRegisterSerializer, VerifyOTPSerializer
+)
 from .make_token import get_tokens_for_user
 
 
@@ -31,8 +34,8 @@ class ToDoListView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.is_admin:
-            return ToDoList.objects.all()  # admin → barcha ishlari
-        return ToDoList.objects.filter(user=user, bajarilgan=False)  # user → tugallanmaganlari
+            return ToDoList.objects.all()
+        return ToDoList.objects.filter(user=user, bajarilgan=False)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -47,3 +50,28 @@ class ToDoDetailView(generics.RetrieveUpdateDestroyAPIView):
         if user.is_admin:
             return ToDoList.objects.all()
         return ToDoList.objects.filter(user=user, bajarilgan=False)
+
+
+class PhoneRegisterView(APIView):
+    @swagger_auto_schema(request_body=PhoneRegisterSerializer)
+    def post(self, request):
+        serializer = PhoneRegisterSerializer(data=request.data, context={})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        otp_code = serializer.context["otp_code"]  # test uchun
+        return Response({
+            "detail": "Ro‘yxatdan o‘tildi. SMS kodi yuborildi.",
+            "otp_code": otp_code  # testda ko‘rsatamiz
+        }, status=201)
+
+
+
+class VerifyOTPView(APIView):
+    @swagger_auto_schema(request_body=VerifyOTPSerializer)
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+
+        token = get_tokens_for_user(user)
+        return Response({"detail": "Telefon tasdiqlandi", **token}, status=200)

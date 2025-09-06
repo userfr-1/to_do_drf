@@ -5,13 +5,16 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
-from configapp.views import LoginUser, RegisterUser, ToDoListView, ToDoDetailView
+from configapp.views import (
+    LoginUser, RegisterUser, ToDoListView, ToDoDetailView,
+    PhoneRegisterView, VerifyOTPView
+)
 
 schema_view = get_schema_view(
    openapi.Info(
       title="My API",
       default_version='v1',
-      description="ToDo Project API",
+      description="ToDo Project API with OTP",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@example.com"),
       license=openapi.License(name="BSD License"),
@@ -30,18 +33,18 @@ api_urlpatterns = [
     path("login/", LoginUser.as_view(), name="login"),
     path("register/", RegisterUser.as_view(), name="register"),
 
-    # ToDo endpoints
+    # OTP
+    path("phone-register/", PhoneRegisterView.as_view(), name="phone_register"),
+    path("verify-otp/", VerifyOTPView.as_view(), name="verify_otp"),
+
+    # ToDo
     path("todos/", ToDoListView.as_view(), name="todo_list"),
     path("todos/<int:pk>/", ToDoDetailView.as_view(), name="todo_detail"),
 ]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
-    # Swagger
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-
-    # API
     path("api/", include(api_urlpatterns)),
 ]
