@@ -11,15 +11,15 @@ from .serializers import (
 )
 from .make_token import get_tokens_for_user
 
-
 class LoginUser(APIView):
     @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(User, username=serializer.validated_data.get("username"))
+        # serializer validatsiya qilgan foydalanuvchini olamiz
+        user = serializer.validated_data["user"]
         token = get_tokens_for_user(user)
-        return Response(data=token)
+        return Response(token, status=200)
 
 
 class RegisterUser(generics.CreateAPIView):
